@@ -10,7 +10,7 @@
     <div class="console">
         <!-- Console Header -->
         <div class="console-header">
-            <div class="console-title">GAME • BOY • ADVANCE (style)</div>
+            <div class="console-title">BULLS • COWS • ADVANCE</div>
             <div class="power-section">
                 <div class="power-label">POWER</div>
                 <div class="power-light"></div>
@@ -90,7 +90,18 @@
                     <!-- Guess Section (YOU mode) -->
                     <div class="guess-section" id="guessSection">
                         <div class="guess-label">Guess:</div>
-                        <input type="text" class="guess-input" id="guessInput" placeholder="" maxlength="3">
+                        <div class="guess-input-row">
+                            <input type="text" class="guess-input" id="guessInput" placeholder="" maxlength="3">
+                            <div class="you-directions">
+                                <div class="you-directions-title">YOU MODE TIPS</div>
+                                <ul>
+                                    <li>Use digits 1-9 only.</li>
+                                    <li>Each digit must be unique.</li>
+                                    <li>Enter 3 digits.</li>
+                                    <li>No zero. Seven lives total.</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- AI Mode Section (hidden by default) -->
@@ -124,6 +135,15 @@
                                     <button class="action-button feedback-submit" id="submitFeedbackButton">Submit</button>
                                 </div>
                             </div>
+                        </div>
+                        <div class="direction-card ai-directions">
+                            <div class="direction-card-title">AI MODE TIPS</div>
+                            <ul>
+                                <li>Pick a secret with unique digits.</li>
+                                <li>Provide Bulls/Cows after each guess.</li>
+                                <li>Green “+” = right digit & slot.</li>
+                                <li>Each wrong hint costs the AI a life.</li>
+                            </ul>
                         </div>
                     </div>
 

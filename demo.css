@@ -391,6 +391,12 @@ body {
     color: white;
 }
 
+.guess-input-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
 .guess-input {
     background: #2d2d2d;
     border: 2px solid #00bfff;
@@ -406,6 +412,37 @@ body {
 .guess-input:focus {
     border-color: #00d9ff;
     box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+.you-directions {
+    flex: 1 1 160px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(0, 191, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px;
+    min-width: 200px;
+}
+
+.you-directions-title {
+    font-size: 9px;
+    color: #78f0ff;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.you-directions ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 8px;
+    color: #c2d4ff;
+}
+
+.you-directions li::before {
+    content: '▶';
+    color: #78f0ff;
+    margin-right: 6px;
 }
 
 .bulls-cows-display {
