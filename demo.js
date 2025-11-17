@@ -14,7 +14,6 @@ let columns = [];
 let secretNumber = '';
 let gameWon = false;
 let lives = 7;
-let lockedDigits = [null, null, null];
 
 // AI Mode variables
 let gameMode = 'YOU'; // 'YOU' or 'AI'
@@ -139,6 +138,10 @@ function resetAIGame() {
     currentGuessDisplay = null;
     currentColumn = null;
     columns = [];
+    if (guessInput) {
+        guessInput.value = '';
+        updateCurrentGuessDisplay('');
+    }
 }
 
 // AI makes next guess
@@ -168,7 +171,7 @@ function aiMakeNextGuess() {
     aiGuessCount++;
 }
 
-// Calculate bulls and cows for a guess and return digit status
+// Calculate bulls and cows for a guess
 function calculateBullsAndCows(guess) {
     let bulls = 0;
     let cows = 0;
@@ -176,35 +179,26 @@ function calculateBullsAndCows(guess) {
     const secretDigits = secretNumber.split('');
     const guessCopy = [...guessDigits];
     const secretCopy = [...secretDigits];
-    const digitStatus = []; // 'correct', 'wrong-position', 'incorrect'
     
-    // First pass: Check for bulls (correct digit in correct position)
     for (let i = 0; i < 3; i++) {
         if (guessCopy[i] === secretCopy[i]) {
             bulls++;
-            digitStatus[i] = 'correct';
-            guessCopy[i] = 'X'; // Mark as used
-            secretCopy[i] = 'X'; // Mark as used
-        } else {
-            digitStatus[i] = null; // Will be determined later
+            guessCopy[i] = 'X';
+            secretCopy[i] = 'X';
         }
     }
     
-    // Second pass: Check for cows (correct digit in wrong position)
     for (let i = 0; i < 3; i++) {
-        if (digitStatus[i] !== 'correct') {
+        if (guessCopy[i] !== 'X') {
             const index = secretCopy.indexOf(guessCopy[i]);
             if (index !== -1 && secretCopy[index] !== 'X') {
                 cows++;
-                digitStatus[i] = 'wrong-position';
-                secretCopy[index] = 'X'; // Mark as used
-            } else {
-                digitStatus[i] = 'incorrect';
+                secretCopy[index] = 'X';
             }
         }
     }
     
-    return { bulls, cows, digitStatus };
+    return { bulls, cows };
 }
 
 // Update lives display
@@ -302,302 +296,231 @@ function createGuessContainer(guess) {
     const display = document.createElement('div');
     display.className = 'bulls-cows-display';
     
-    // Create 3 placeholders with locked digits pre-filled
+    const digitsWrapper = document.createElement('div');
+    digitsWrapper.className = 'guess-digits';
+    
     for (let i = 0; i < 3; i++) {
         const placeholder = document.createElement('div');
         placeholder.className = 'number-placeholder';
-        
-        // Check if this position has a locked digit
-        if (lockedDigits[i] !== null) {
-            placeholder.textContent = lockedDigits[i];
-            placeholder.classList.add('locked', 'correct', 'filled');
-        } else if (guess && i < guess.length) {
+        if (guess && i < guess.length) {
             placeholder.textContent = guess[i];
             placeholder.classList.add('filled');
         } else {
             placeholder.textContent = '-';
         }
-        display.appendChild(placeholder);
+        digitsWrapper.appendChild(placeholder);
     }
     
+    const feedbackWrapper = document.createElement('div');
+    feedbackWrapper.className = 'feedback-icons';
+    
+    display.appendChild(digitsWrapper);
+    display.appendChild(feedbackWrapper);
     container.appendChild(display);
     column.appendChild(container);
     
     return display;
 }
 
-// Update digit colors based on their status
-function updateDigitColors(display, digitStatus) {
-    const placeholders = display.querySelectorAll('.number-placeholder');
-    placeholders.forEach((placeholder, index) => {
-        // Remove all status classes
-        placeholder.classList.remove('correct', 'wrong-position', 'incorrect', 'filled');
-        
-        // Add appropriate class based on status
-        if (digitStatus[index] === 'correct') {
-            placeholder.classList.add('correct', 'filled');
-        } else if (digitStatus[index] === 'wrong-position') {
-            placeholder.classList.add('wrong-position', 'filled');
-        } else if (digitStatus[index] === 'incorrect') {
-            placeholder.classList.add('incorrect', 'filled');
-        }
-    });
+// Update feedback symbols (+/-) for bulls and cows
+function updateFeedbackSymbols(display, bulls, cows) {
+    const feedback = display.querySelector('.feedback-icons');
+    if (!feedback) return;
+    feedback.innerHTML = '';
+    
+    if (bulls === 0 && cows === 0) {
+        const dot = document.createElement('span');
+        dot.className = 'feedback-symbol none';
+        dot.textContent = '•';
+        feedback.appendChild(dot);
+        return;
+    }
+    
+    for (let i = 0; i < bulls; i++) {
+        const plus = document.createElement('span');
+        plus.className = 'feedback-symbol plus';
+        plus.textContent = '+';
+        feedback.appendChild(plus);
+    }
+    
+    for (let i = 0; i < cows; i++) {
+        const minus = document.createElement('span');
+        minus.className = 'feedback-symbol minus';
+        minus.textContent = '-';
+        feedback.appendChild(minus);
+    }
 }
 
-// Update current guess display (for typing)
+// Helpers for guess input handling
+function sanitizeGuessValue(value) {
+    let result = '';
+    const digits = value.replace(/[^1-9]/g, '');
+    for (const digit of digits) {
+        if (!result.includes(digit)) {
+            result += digit;
+            if (result.length === 3) break;
+        }
+    }
+    return result;
+}
+
 function updateCurrentGuessDisplay(value) {
-    // Check if we've reached max total rows
-    if (getTotalRows() >= maxTotalRows) {
+    if (getTotalRows() >= maxTotalRows && !currentGuessDisplay) {
         return;
     }
     
     if (!currentGuessDisplay) {
-        // Create first container if it doesn't exist
-        // Check if current column has 4 rows, if so, getCurrentColumn will create a new one
-        currentGuessDisplay = createGuessContainer('');
-        if (!currentGuessDisplay) {
-            // Max rows reached, can't create container
+        const sanitizedValue = sanitizeGuessValue(value);
+        if (!sanitizedValue.length) {
             return;
         }
+        currentGuessDisplay = createGuessContainer('');
+        if (!currentGuessDisplay) {
+            return;
+        }
+        const placeholders = currentGuessDisplay.querySelectorAll('.number-placeholder');
+        placeholders.forEach(placeholder => {
+            placeholder.textContent = '-';
+            placeholder.classList.remove('filled');
+        });
     }
     
-    if (!currentGuessDisplay) return;
-    
+    const sanitized = sanitizeGuessValue(value);
     const placeholders = currentGuessDisplay.querySelectorAll('.number-placeholder');
-    
-    // Extract only digits for unlocked positions from value
-    // The value might contain locked digits, so we need to filter them out
-    let unlockedInput = '';
-    for (let i = 0; i < value.length; i++) {
-        let digit = value[i];
-        let isLockedInPosition = false;
-        // Check if this digit at this position matches a locked digit
-        if (i < 3 && lockedDigits[i] === digit) {
-            // This digit is in a locked position, skip it
-            isLockedInPosition = true;
-        }
-        // Also check if this digit is already locked in any position
-        let isLockedDigit = false;
-        for (let pos = 0; pos < 3; pos++) {
-            if (lockedDigits[pos] === digit) {
-                isLockedDigit = true;
-                break;
-            }
-        }
-        // Only add if it's not locked in this position and not already a locked digit
-        if (!isLockedInPosition && !isLockedDigit) {
-            unlockedInput += digit;
-        }
-    }
-    
-    // Now build display value: locked digits in their positions, unlocked input fills rest
-    let displayValue = '';
-    let inputIndex = 0;
-    
-    for (let i = 0; i < 3; i++) {
-        if (lockedDigits[i] !== null) {
-            // Position is locked, use locked digit
-            placeholders[i].textContent = lockedDigits[i];
-            placeholders[i].classList.remove('locked', 'correct', 'wrong-position', 'incorrect', 'filled');
-            placeholders[i].classList.add('locked', 'correct', 'filled');
-            displayValue += lockedDigits[i];
+    placeholders.forEach((placeholder, index) => {
+        const digit = sanitized[index];
+        if (digit) {
+            placeholder.textContent = digit;
+            placeholder.classList.add('filled');
         } else {
-            // Position is not locked, fill from unlocked input
-            if (inputIndex < unlockedInput.length) {
-                const digit = unlockedInput[inputIndex];
-                placeholders[i].textContent = digit;
-                placeholders[i].classList.remove('locked', 'correct', 'wrong-position', 'incorrect', 'filled');
-                placeholders[i].classList.add('filled');
-                displayValue += digit;
-                inputIndex++;
-            } else {
-                placeholders[i].textContent = '-';
-                placeholders[i].classList.remove('locked', 'correct', 'wrong-position', 'incorrect', 'filled');
-            }
+            placeholder.textContent = '-';
+            placeholder.classList.remove('filled');
         }
-    }
+    });
     
-    // Update input field to reflect locked positions
-    guessInput.value = displayValue;
+    if (guessInput) {
+        guessInput.value = sanitized;
+    }
 }
 
-// Guess input handling
 const guessInput = document.getElementById('guessInput');
 
-// Build guess value from input, accounting for locked positions
 function buildGuessFromInput(inputValue) {
-    let result = '';
-    let inputIndex = 0;
-    
-    for (let i = 0; i < 3; i++) {
-        if (lockedDigits[i] !== null) {
-            // Position is locked, use locked digit
-            result += lockedDigits[i];
-        } else if (inputIndex < inputValue.length) {
-            // Position not locked, use input digit
-            result += inputValue[inputIndex];
-            inputIndex++;
-        }
-    }
-    
-    return result;
+    return sanitizeGuessValue(inputValue);
 }
 
-// Only allow digits (1-9, 0 is forbidden)
-guessInput.addEventListener('input', function(e) {
-    // Get current input value, remove non-digits and 0
-    let rawInput = this.value.replace(/[^1-9]/g, ''); // Only allow 1-9
-    
-    // Extract only digits that should go into unlocked positions
-    // Remove digits that match locked positions
-    let unlockedInput = '';
-    for (let i = 0; i < rawInput.length; i++) {
-        let digit = rawInput[i];
-        let isLockedDigit = false;
-        // Check if this digit is locked in any position
-        for (let pos = 0; pos < 3; pos++) {
-            if (lockedDigits[pos] === digit) {
-                isLockedDigit = true;
-                break;
-            }
-        }
-        // Only add if it's not a locked digit
-        if (!isLockedDigit) {
-            unlockedInput += digit;
-        }
-    }
-    
-    // Build final value: locked digits in their positions, user input fills unlocked positions
-    let newValue = '';
-    let inputIndex = 0;
-    for (let i = 0; i < 3; i++) {
-        if (lockedDigits[i] !== null) {
-            // Position is locked, use locked digit
-            newValue += lockedDigits[i];
-        } else if (inputIndex < unlockedInput.length) {
-            // Position is unlocked, use next digit from user input
-            newValue += unlockedInput[inputIndex];
-            inputIndex++;
-        }
-    }
-    
-    // Limit to 3 digits total
-    if (newValue.length > 3) {
-        newValue = newValue.slice(0, 3);
-    }
-    
-    this.value = newValue;
-    
-    // Update current guess display
-    updateCurrentGuessDisplay(newValue);
+guessInput.addEventListener('input', function() {
+    const sanitized = sanitizeGuessValue(this.value);
+    this.value = sanitized;
+    updateCurrentGuessDisplay(sanitized);
 });
+
+function addDigitToGuessInput(digit) {
+    if (!guessInput) return;
+    if (!/^[1-9]$/.test(digit)) return;
+    let current = sanitizeGuessValue(guessInput.value);
+    if (current.includes(digit) || current.length >= 3) return;
+    current += digit;
+    guessInput.value = current;
+    updateCurrentGuessDisplay(current);
+}
+
+function removeLastDigitFromGuessInput() {
+    if (!guessInput) return;
+    let current = sanitizeGuessValue(guessInput.value);
+    if (!current.length) return;
+    current = current.slice(0, -1);
+    guessInput.value = current;
+    updateCurrentGuessDisplay(current);
+}
+
+function submitCurrentGuess() {
+    if (!guessInput || waitingForStart) return;
+    let guess = sanitizeGuessValue(guessInput.value);
+    
+    if (!(guess && guess.length === 3 && !gameWon && lives > 0)) {
+        return;
+    }
+    
+    if (getTotalRows() >= maxTotalRows && !currentGuessDisplay) {
+        console.log('Maximum total rows (7) reached! Cannot submit more guesses.');
+        return;
+    }
+    
+    if (guess.includes('0')) {
+        showGameMessage('0 IS FORBIDDEN!', '');
+        return;
+    }
+    
+    const uniqueDigits = new Set(guess.split(''));
+    if (uniqueDigits.size !== 3) {
+        showGameMessage('EACH DIGIT MUST BE DIFFERENT!', '');
+        return;
+    }
+    
+    if (!currentGuessDisplay) {
+        currentGuessDisplay = createGuessContainer('');
+        if (!currentGuessDisplay) return;
+    }
+    
+    const placeholders = currentGuessDisplay.querySelectorAll('.number-placeholder');
+    for (let i = 0; i < 3; i++) {
+        placeholders[i].textContent = guess[i];
+        placeholders[i].classList.add('filled');
+    }
+    
+    const { bulls, cows } = calculateBullsAndCows(guess);
+    updateFeedbackSymbols(currentGuessDisplay, bulls, cows);
+    
+    if (bulls === 3) {
+        gameWon = true;
+        showGameMessage('YOU WON!', secretNumber);
+        score += 100;
+        updateScore();
+    } else {
+        lives--;
+        updateLives();
+        
+        if (lives <= 0) {
+            showGameMessage('GAME OVER', secretNumber);
+        }
+    }
+    
+    guessCount++;
+    currentGuessDisplay = null;
+    guessInput.value = '';
+    
+    if (!gameWon && lives > 0 && getTotalRows() < maxTotalRows) {
+        currentGuessDisplay = createGuessContainer('');
+        updateCurrentGuessDisplay('');
+    }
+}
 
 guessInput.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
-        // Get guess value, ensuring locked digits are included
-        let guess = this.value.trim();
-        if (guess.length < 3) {
-            // Fill in locked digits if not present
-            guess = buildGuessFromInput(guess);
-        }
-        
-        if (guess && guess.length === 3 && !gameWon && lives > 0) {
-            // Check if we've reached max total rows
-            if (getTotalRows() >= maxTotalRows) {
-                console.log('Maximum total rows (7) reached! Cannot submit more guesses.');
-                return;
-            }
-            
-            // Validate guess has no 0 (0 is forbidden)
-            if (guess.includes('0')) {
-                console.log('0 is forbidden!');
-                showGameMessage('0 IS FORBIDDEN!', '');
-                return;
-            }
-            
-            // Validate guess has no repeated digits
-            const guessDigits = guess.split('');
-            const uniqueDigits = new Set(guessDigits);
-            if (uniqueDigits.size !== 3) {
-                console.log('Guess must have 3 unique digits!');
-                showGameMessage('EACH DIGIT MUST BE DIFFERENT!', '');
-                return;
-            }
-            
-            // Process guess
-            console.log('Guess submitted:', guess);
-            
-            // Finalize the current guess display (it's already in the container)
-            if (currentGuessDisplay) {
-                const placeholders = currentGuessDisplay.querySelectorAll('.number-placeholder');
-                for (let i = 0; i < 3; i++) {
-                    placeholders[i].textContent = guess[i];
-                }
-                
-                // Calculate bulls and cows and get digit status
-                const { bulls, cows, digitStatus } = calculateBullsAndCows(guess);
-                
-                // Update locked digits - lock correct positions
-                for (let i = 0; i < 3; i++) {
-                    if (digitStatus[i] === 'correct') {
-                        lockedDigits[i] = guess[i];
-                    }
-                }
-                
-                // Update digit colors based on status
-                updateDigitColors(currentGuessDisplay, digitStatus);
-                
-                // Check for win (3 bulls)
-                if (bulls === 3) {
-                    gameWon = true;
-                    console.log('You won! The secret number was:', secretNumber);
-                    showGameMessage('YOU WON!', secretNumber);
-                    score += 100;
-                    updateScore();
-                } else {
-                    // Wrong guess - reduce one life
-                    lives--;
-                    updateLives();
-                    
-                    if (lives <= 0) {
-                        console.log('Game over! The secret number was:', secretNumber);
-                        showGameMessage('GAME OVER', secretNumber);
-                    }
-                }
-            }
-            
-            // Reset for next guess
-            guessCount++;
-            currentGuessDisplay = null;
-            
-            // Build next guess value with locked digits
-            let nextGuessValue = '';
-            for (let i = 0; i < 3; i++) {
-                if (lockedDigits[i] !== null) {
-                    nextGuessValue += lockedDigits[i];
-                }
-            }
-            this.value = nextGuessValue;
-            
-            // Create new container for next guess only if we haven't reached max and game not won
-            if (!gameWon && lives > 0 && getTotalRows() < maxTotalRows) {
-                // getCurrentColumn will automatically create a new column if current one has 4 rows
-                currentGuessDisplay = createGuessContainer('');
-                // Update display with locked digits
-                updateCurrentGuessDisplay(nextGuessValue);
-            }
-        }
+        submitCurrentGuess();
     }
 });
 
-// D-Pad button handling
-document.querySelectorAll('.dpad-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const direction = this.getAttribute('data-direction');
-        console.log('D-Pad pressed:', direction);
-        // Add your navigation logic here
+// Keypad interactions
+document.querySelectorAll('[data-digit]').forEach(button => {
+    button.addEventListener('click', () => {
+        const digit = button.getAttribute('data-digit');
+        if (digit) {
+            addDigitToGuessInput(digit);
+        }
     });
 });
+
+const dpadEnterButton = document.getElementById('dpadEnter');
+if (dpadEnterButton) {
+    dpadEnterButton.addEventListener('click', submitCurrentGuess);
+}
+
+const dpadDeleteButton = document.getElementById('dpadDelete');
+if (dpadDeleteButton) {
+    dpadDeleteButton.addEventListener('click', removeLastDigitFromGuessInput);
+}
 
 // Reset game function
 function resetGame() {
@@ -607,7 +530,6 @@ function resetGame() {
     columns = [];
     gameWon = false;
     lives = 7;
-    lockedDigits = [null, null, null]; // Reset locked digits
     
     if (gameMode === 'YOU') {
         secretNumber = generateSecretNumber();
@@ -616,12 +538,16 @@ function resetGame() {
         const gameArea = document.getElementById('gameArea');
         gameArea.innerHTML = '';
         guessInput.value = '';
+        updateCurrentGuessDisplay('');
         // Create first guess container for new game
         if (isPoweredOn && !waitingForStart) {
             currentGuessDisplay = createGuessContainer('');
+            updateCurrentGuessDisplay('');
         }
     } else {
         resetAIGame();
+        guessInput.value = '';
+        updateCurrentGuessDisplay('');
     }
 }
 
@@ -651,12 +577,14 @@ function startGameInMode(selectedMode) {
         secretNumber = generateSecretNumber();
         lives = 7;
         gameWon = false;
-        lockedDigits = [null, null, null]; // Reset locked digits
         updateLives();
         console.log('Game started in YOU mode! Secret number:', secretNumber);
+        guessInput.value = '';
+        updateCurrentGuessDisplay('');
         
         if (guessCount === 0) {
             currentGuessDisplay = createGuessContainer('');
+            updateCurrentGuessDisplay('');
         }
     } else {
         // AI mode - reset and show secret input section
@@ -664,6 +592,8 @@ function startGameInMode(selectedMode) {
         document.getElementById('secretInputSection').style.display = 'flex';
         document.getElementById('feedbackSection').style.display = 'none';
         console.log('Game started in AI mode!');
+        guessInput.value = '';
+        updateCurrentGuessDisplay('');
     }
 }
 
@@ -810,12 +740,12 @@ document.getElementById('powerButton').addEventListener('click', function() {
         columns = [];
         gameWon = false;
         lives = 7;
-        lockedDigits = [null, null, null]; // Reset locked digits
         secretNumber = '';
         updateLives();
         const gameArea = document.getElementById('gameArea');
         gameArea.innerHTML = '';
         guessInput.value = '';
+        updateCurrentGuessDisplay('');
         
         // Hide mode selection if visible
         const modeSelection = document.getElementById('modeSelection');
@@ -897,18 +827,16 @@ document.getElementById('submitFeedbackButton').addEventListener('click', functi
         return;
     }
     
+    const latestDisplay = columns[columns.length - 1]
+        ?.querySelector('.guess-container:last-child .bulls-cows-display');
+    if (latestDisplay) {
+        updateFeedbackSymbols(latestDisplay, bulls, cows);
+    }
+    
     if (bulls === 3) {
         // AI won!
         aiGameWon = true;
         showGameMessage('AI WON!', currentGuess);
-        const guessContainer = columns[columns.length - 1]?.querySelector('.guess-container:last-child');
-        if (guessContainer) {
-            const placeholders = guessContainer.querySelectorAll('.number-placeholder');
-            placeholders.forEach(p => {
-                p.classList.remove('incorrect', 'wrong-position');
-                p.classList.add('correct');
-            });
-        }
         return;
     }
     
@@ -917,6 +845,18 @@ document.getElementById('submitFeedbackButton').addEventListener('click', functi
     
     if (aiPossibleNumbers.length === 0) {
         showGameMessage('NO VALID NUMBERS!', '');
+        return;
+    }
+    
+    // Consume a life for this failed attempt
+    if (lives > 0) {
+        lives--;
+        updateLives();
+    }
+    
+    if (lives <= 0) {
+        aiGameWon = true;
+        showGameMessage('AI FAILED!', userSecretNumber || '');
         return;
     }
     
@@ -954,5 +894,4 @@ isPoweredOn = false;
 waitingForStart = false;
 gameWon = false;
 lives = 7;
-lockedDigits = [null, null, null]; // Reset locked digits
 secretNumber = '';

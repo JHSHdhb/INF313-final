@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Boy Advance - Interactive</title>
+    <title>Bulls & Cows - Interactive</title>
     <link rel="stylesheet" href="demo.css">
 </head>
 <body>
@@ -110,16 +110,18 @@
                                 <div class="ai-guess-display" id="aiGuessDisplay">---</div>
                                 
                                 <!-- Bulls and Cows Input -->
-                                <div class="feedback-inputs" style="display: flex; gap: 10px; margin-top: 10px;">
-                                    <div style="flex: 1;">
-                                        <div class="guess-label" style="font-size: 8px;">Bulls:</div>
-                                        <input type="number" class="guess-input" id="bullsInput" min="0" max="3" value="0" style="text-align: center; padding: 8px;">
+                                <div class="feedback-inputs">
+                                    <div class="feedback-input">
+                                        <div class="guess-label small">Bulls:</div>
+                                        <input type="number" class="guess-input" id="bullsInput" min="0" max="3" value="0">
                                     </div>
-                                    <div style="flex: 1;">
-                                        <div class="guess-label" style="font-size: 8px;">Cows:</div>
-                                        <input type="number" class="guess-input" id="cowsInput" min="0" max="3" value="0" style="text-align: center; padding: 8px;">
+                                    <div class="feedback-input">
+                                        <div class="guess-label small">Cows:</div>
+                                        <input type="number" class="guess-input" id="cowsInput" min="0" max="3" value="0">
                                     </div>
-                                    <button class="action-button" id="submitFeedbackButton" style="margin-top: 20px; font-size: 10px; padding: 8px;">Submit</button>
+                                </div>
+                                <div class="feedback-submit-wrapper">
+                                    <button class="action-button feedback-submit" id="submitFeedbackButton">Submit</button>
                                 </div>
                             </div>
                         </div>
@@ -142,16 +144,22 @@
         <!-- Controls -->
         <div class="controls">
             <!-- D-Pad -->
-            <div class="dpad">
-                <div class="dpad-button" data-direction="up-left"></div>
-                <div class="dpad-button" data-direction="up"></div>
-                <div class="dpad-button" data-direction="up-right"></div>
-                <div class="dpad-button" data-direction="left"></div>
-                <div class="dpad-button center" data-direction="center"></div>
-                <div class="dpad-button" data-direction="right"></div>
-                <div class="dpad-button" data-direction="down-left"></div>
-                <div class="dpad-button" data-direction="down"></div>
-                <div class="dpad-button" data-direction="down-right"></div>
+            <div class="keypad-wrapper">
+                <div class="dpad">
+                    <div class="dpad-button" data-digit="1"></div>
+                    <div class="dpad-button" data-digit="2"></div>
+                    <div class="dpad-button" data-digit="3"></div>
+                    <div class="dpad-button" data-digit="4"></div>
+                    <div class="dpad-button center" data-digit="5"></div>
+                    <div class="dpad-button" data-digit="6"></div>
+                    <div class="dpad-button" data-digit="7"></div>
+                    <div class="dpad-button" data-digit="8"></div>
+                    <div class="dpad-button" data-digit="9"></div>
+                </div>
+                <div class="dpad-actions">
+                    <button class="dpad-action enter" id="dpadEnter">Ent</button>
+                    <button class="dpad-action delete" id="dpadDelete">Del</button>
+                </div>
             </div>
 
             <!-- Action Buttons -->
