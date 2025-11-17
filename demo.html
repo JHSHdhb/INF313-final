@@ -95,7 +95,7 @@
                             <div class="you-directions">
                                 <div class="you-directions-title">YOU MODE TIPS</div>
                                 <ul>
-                                    <li>Use digits 1-9 only.</li>
+                                    <li>A Secret with 3 unique digits (1-9).</li>
                                     <li>Each digit must be unique.</li>
                                     <li>Enter 3 digits.</li>
                                     <li>No zero. Seven lives total.</li>
@@ -113,7 +113,16 @@
                                 <div class="guess-label">Your Secret Number:</div>
                                 <input type="text" class="guess-input" id="secretNumberInput" placeholder="" maxlength="3">
                                 <button class="action-button" id="setSecretButton" style="margin-top: 10px; width: 100%; font-size: 10px; padding: 8px;">Set Secret</button>
+                                <div class="you-directions">
+                                <div class="you-directions-title">AI MODE TIPS</div>
+                                <ul>
+                                    <li>A Secret with 3 unique digits (1-9).</li>
+                                    <li>Provide # of Bulls (+)/Cows (-) after each guess.</li>
+                                    <li>AI also has seven lives total.</li>
+                                </ul>
                             </div>
+                            </div>
+
                             
                             <!-- Feedback Section (shown after secret is set) -->
                             <div class="feedback-section" id="feedbackSection" style="display: none;">
@@ -134,16 +143,16 @@
                                 <div class="feedback-submit-wrapper">
                                     <button class="action-button feedback-submit" id="submitFeedbackButton">Submit</button>
                                 </div>
+
+                                 <div class="you-directions">
+                                <div class="you-directions-title">AI MODE TIPS</div>
+                                <ul>
+                                    <li>A Secret with 3 unique digits (1-9).</li>
+                                    <li>Provide # of Bulls (+)/Cows (-) after each guess.</li>
+                                    <li>AI also has seven lives total.</li>
+                                </ul>
                             </div>
-                        </div>
-                        <div class="direction-card ai-directions">
-                            <div class="direction-card-title">AI MODE TIPS</div>
-                            <ul>
-                                <li>Pick a secret with unique digits.</li>
-                                <li>Provide Bulls/Cows after each guess.</li>
-                                <li>Green “+” = right digit & slot.</li>
-                                <li>Each wrong hint costs the AI a life.</li>
-                            </ul>
+                            </div>
                         </div>
                     </div>
 

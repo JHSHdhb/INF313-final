@@ -415,7 +415,7 @@ body {
 }
 
 .you-directions {
-    flex: 1 1 160px;
+    flex: 1 1 120px;
     background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(0, 191, 255, 0.2);
     border-radius: 12px;
