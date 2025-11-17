@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Boy Advance - Interactive</title>
+    <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+    <div class="console">
+        <!-- Console Header -->
+        <div class="console-header">
+            <div class="console-title">GAME • BOY • ADVANCE (style)</div>
+            <div class="power-section">
+                <div class="power-label">POWER</div>
+                <div class="power-light"></div>
+                <div class="signal-bars">
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                    <div class="signal-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen -->
+        <div class="screen">
+            <!-- Pacman Animation -->
+            <div class="pacman-animation hidden" id="pacmanAnimation">
+                <div class="pacman-container">
+                    <div class="pacman">
+                        <img id="pacmanImg" src="open.png" alt="Pacman">
+                    </div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+                <div class="game-start-text" id="gameStartText">Press Start to begin</div>
+            </div>
+
+            <!-- Game Mode Selection Menu -->
+            <div class="mode-selection hidden" id="modeSelection">
+                <div class="mode-selection-title">SELECT GAME MODE</div>
+                <div class="mode-selection-buttons">
+                    <button class="mode-selection-button" id="selectYouMode">
+                        <div class="mode-button-title">YOU</div>
+                        <div class="mode-button-desc">Guess the number</div>
+                    </button>
+                    <button class="mode-selection-button" id="selectAIMode">
+                        <div class="mode-button-title">AI</div>
+                        <div class="mode-button-desc">AI guesses your number</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Screen Content -->
+            <div class="screen-content hidden" id="screenContent">
+                <!-- Status Bar -->
+                <div class="status-bar">
+                    <div class="status-item">
+                        <span>Mode:</span>
+                        <div class="status-button" id="modeButton">YOU</div>
+                    </div>
+                    <div class="status-item">
+                        <span>Lives:</span>
+                        <div class="lives">
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <span>Score:</span>
+                        <div class="status-button" id="score">0000</div>
+                    </div>
+                </div>
+
+                <!-- Game Content -->
+                <div class="game-content" id="gameContent">
+                    <!-- Guess Section (YOU mode) -->
+                    <div class="guess-section" id="guessSection">
+                        <div class="guess-label">Guess:</div>
+                        <input type="text" class="guess-input" id="guessInput" placeholder="" maxlength="3">
+                    </div>
+
+                    <!-- AI Mode Section (hidden by default) -->
+                    <div class="ai-mode-section" id="aiModeSection" style="display: none;">
+                        <!-- Combined Secret Number and Feedback Section -->
+                        <div class="ai-game-section" id="aiGameSection">
+                            <!-- Secret Number Input (shown when secret not set) -->
+                            <div class="secret-input-section" id="secretInputSection">
+                                <div class="guess-label">Your Secret Number:</div>
+                                <input type="text" class="guess-input" id="secretNumberInput" placeholder="" maxlength="3">
+                                <button class="action-button" id="setSecretButton" style="margin-top: 10px; width: 100%; font-size: 10px; padding: 8px;">Set Secret</button>
+                            </div>
+                            
+                            <!-- Feedback Section (shown after secret is set) -->
+                            <div class="feedback-section" id="feedbackSection" style="display: none;">
+                                <div class="guess-label">AI's Guess:</div>
+                                <div class="ai-guess-display" id="aiGuessDisplay">---</div>
+                                
+                                <!-- Bulls and Cows Input -->
+                                <div class="feedback-inputs" style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <div style="flex: 1;">
+                                        <div class="guess-label" style="font-size: 8px;">Bulls:</div>
+                                        <input type="number" class="guess-input" id="bullsInput" min="0" max="3" value="0" style="text-align: center; padding: 8px;">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div class="guess-label" style="font-size: 8px;">Cows:</div>
+                                        <input type="number" class="guess-input" id="cowsInput" min="0" max="3" value="0" style="text-align: center; padding: 8px;">
+                                    </div>
+                                    <button class="action-button" id="submitFeedbackButton" style="margin-top: 20px; font-size: 10px; padding: 8px;">Submit</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Game Area -->
+                    <div class="game-area" id="gameArea">
+                        <!-- Guess containers will be added here dynamically -->
+                    </div>
+
+                    <!-- Game Message Display -->
+                    <div class="game-message" id="gameMessage">
+                        <div class="game-message-title" id="gameMessageTitle"></div>
+                        <div class="game-message-digits" id="gameMessageDigits"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <!-- D-Pad -->
+            <div class="dpad">
+                <div class="dpad-button" data-direction="up-left"></div>
+                <div class="dpad-button" data-direction="up"></div>
+                <div class="dpad-button" data-direction="up-right"></div>
+                <div class="dpad-button" data-direction="left"></div>
+                <div class="dpad-button center" data-direction="center"></div>
+                <div class="dpad-button" data-direction="right"></div>
+                <div class="dpad-button" data-direction="down-left"></div>
+                <div class="dpad-button" data-direction="down"></div>
+                <div class="dpad-button" data-direction="down-right"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="action-button" id="startButton">Start</button>
+                <button class="action-button" id="powerButton">Power ON/OFF</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="demo.js" defer></script>
+</body>
+</html>
