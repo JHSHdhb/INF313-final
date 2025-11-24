@@ -547,8 +547,8 @@ body {
 
 /* Game Message Display */
 .game-message {
-    position: absolute;
-    bottom: 10px;
+    position: fixed;
+    bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.9);
@@ -559,9 +559,10 @@ body {
     font-size: 10px;
     color: #ffeb3b;
     text-align: center;
-    z-index: 100;
+    z-index: 999;
     display: none;
-    max-width: 90%;
+    max-width: 420px;
+    width: calc(100% - 40px);
 }
 
 .game-message.visible {

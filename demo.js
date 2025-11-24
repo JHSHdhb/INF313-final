@@ -140,8 +140,8 @@ function resetAIGame() {
     columns = [];
     if (guessInput) {
         guessInput.value = '';
-        updateCurrentGuessDisplay('');
     }
+    activeFeedbackField = 'bulls';
 }
 
 // AI makes next guess
@@ -356,10 +356,8 @@ function sanitizeGuessValue(value) {
     let result = '';
     const digits = value.replace(/[^1-9]/g, '');
     for (const digit of digits) {
-        if (!result.includes(digit)) {
-            result += digit;
-            if (result.length === 3) break;
-        }
+        result += digit;
+        if (result.length === 3) break;
     }
     return result;
 }
@@ -404,6 +402,10 @@ function updateCurrentGuessDisplay(value) {
 }
 
 const guessInput = document.getElementById('guessInput');
+const secretNumberInput = document.getElementById('secretNumberInput');
+const bullsInputField = document.getElementById('bullsInput');
+const cowsInputField = document.getElementById('cowsInput');
+let activeFeedbackField = 'bulls';
 
 function buildGuessFromInput(inputValue) {
     return sanitizeGuessValue(inputValue);
@@ -432,6 +434,66 @@ function removeLastDigitFromGuessInput() {
     current = current.slice(0, -1);
     guessInput.value = current;
     updateCurrentGuessDisplay(current);
+}
+
+function addDigitToSecretInput(digit) {
+    if (!secretNumberInput) return;
+    if (!/^[1-9]$/.test(digit)) return;
+    if (secretNumberInput.value.length >= 3) return;
+    secretNumberInput.value += digit;
+}
+
+function removeLastDigitFromSecretInput() {
+    if (!secretNumberInput) return;
+    secretNumberInput.value = secretNumberInput.value.slice(0, -1);
+}
+
+function setFeedbackFieldValue(field, digit) {
+    if (!field) return;
+    const value = parseInt(digit, 10);
+    if (isNaN(value) || value < 0 || value > 3) return;
+    field.value = String(value);
+}
+
+function secretInputSectionVisible() {
+    const section = document.getElementById('secretInputSection');
+    return section && section.style.display !== 'none';
+}
+
+function getKeypadTarget() {
+    if (gameMode === 'AI') {
+        if (secretInputSectionVisible()) {
+            return 'secret';
+        }
+        return activeFeedbackField === 'cows' ? 'cows' : 'bulls';
+    }
+    return 'guess';
+}
+
+function handleDigitButtonInput(digit) {
+    const target = getKeypadTarget();
+    if (target === 'secret') {
+        addDigitToSecretInput(digit);
+    } else if (target === 'bulls') {
+        setFeedbackFieldValue(bullsInputField, digit);
+    } else if (target === 'cows') {
+        setFeedbackFieldValue(cowsInputField, digit);
+    } else {
+        addDigitToGuessInput(digit);
+    }
+}
+
+function handleDeleteButton() {
+    const target = getKeypadTarget();
+    if (target === 'secret') {
+        removeLastDigitFromSecretInput();
+    } else if (target === 'bulls') {
+        if (bullsInputField) bullsInputField.value = '0';
+    } else if (target === 'cows') {
+        if (cowsInputField) cowsInputField.value = '0';
+    } else {
+        removeLastDigitFromGuessInput();
+    }
 }
 
 function submitCurrentGuess() {
@@ -502,12 +564,32 @@ guessInput.addEventListener('keypress', function(e) {
     }
 });
 
+if (secretNumberInput) {
+    secretNumberInput.addEventListener('focus', () => {
+        if (gameMode === 'AI') {
+            activeFeedbackField = 'bulls';
+        }
+    });
+}
+
+if (bullsInputField) {
+    bullsInputField.addEventListener('focus', () => {
+        activeFeedbackField = 'bulls';
+    });
+}
+
+if (cowsInputField) {
+    cowsInputField.addEventListener('focus', () => {
+        activeFeedbackField = 'cows';
+    });
+}
+
 // Keypad interactions
 document.querySelectorAll('[data-digit]').forEach(button => {
     button.addEventListener('click', () => {
         const digit = button.getAttribute('data-digit');
         if (digit) {
-            addDigitToGuessInput(digit);
+            handleDigitButtonInput(digit);
         }
     });
 });
@@ -519,7 +601,7 @@ if (dpadEnterButton) {
 
 const dpadDeleteButton = document.getElementById('dpadDelete');
 if (dpadDeleteButton) {
-    dpadDeleteButton.addEventListener('click', removeLastDigitFromGuessInput);
+    dpadDeleteButton.addEventListener('click', handleDeleteButton);
 }
 
 // Reset game function
@@ -547,7 +629,6 @@ function resetGame() {
     } else {
         resetAIGame();
         guessInput.value = '';
-        updateCurrentGuessDisplay('');
     }
 }
 
@@ -593,7 +674,7 @@ function startGameInMode(selectedMode) {
         document.getElementById('feedbackSection').style.display = 'none';
         console.log('Game started in AI mode!');
         guessInput.value = '';
-        updateCurrentGuessDisplay('');
+        activeFeedbackField = 'bulls';
     }
 }
 
@@ -803,6 +884,7 @@ document.getElementById('setSecretButton').addEventListener('click', function() 
     // Hide secret input section, show feedback section
     document.getElementById('secretInputSection').style.display = 'none';
     document.getElementById('feedbackSection').style.display = 'flex';
+    activeFeedbackField = 'bulls';
     
     // Initialize AI guessing
     aiPossibleNumbers = generateAllPossibleNumbers();
@@ -842,7 +924,8 @@ document.getElementById('submitFeedbackButton').addEventListener('click', functi
     
     // Filter possible numbers based on feedback (already applies hints)
     aiPossibleNumbers = filterPossibleNumbers(currentGuess, bulls, cows, aiPossibleNumbers);
-    
+    // print remaining possible numbers for debugging
+    console.log('Possible numbers left for AI:', aiPossibleNumbers);
     if (aiPossibleNumbers.length === 0) {
         showGameMessage('NO VALID NUMBERS!', '');
         return;
